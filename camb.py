@@ -63,6 +63,7 @@ def __getsigma8(As , params):
 	params["scalar_amp"] = As
 	
 	return sigma8( **params)  
+
 def Asforsigma8(sigma8val , Asmin = 1.1e-9, Asmax = 5.1e-9, **params):
 
 	"""Returns the value of As, the amplitude of the primordial scalar
