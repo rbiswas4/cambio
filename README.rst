@@ -9,20 +9,16 @@ installed.
 Code List:
 =========
 
-cambruns.py : 
-==
+- cambruns.py : 
 		Code to launch camb jobs in a script.
 
-cambplot.py : 
-==
+- cambplot.py : 
 	Plot the power spectrum from a camb output file 
 
-camb.py :
-==
+- camb.py :
 	uses pycamb class to interact with CAMB from a python interface
 
-tests.py :
-==
+- tests.py :
 	Tests for camb.py 
 
 
