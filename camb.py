@@ -11,6 +11,68 @@ Requirements: pycamb
 
 import numpy as np 
 import pycamb as pyc
+import scipy.interpolate as sip 
+from astropy.cosmology import Planck13 as cosmo
+
+def PK ( koverh , redshiftlist = [0] ,
+	maxk = 1.0 ,
+	logk_spacing =0.02 ,
+	**params ) :
+
+
+	kh, PK , sigma8 = pyc.matter_power (redshifts = redshiftlist, 
+		maxk = maxk , 
+		logk_spacing = logk_spacing ,  
+		get_sigma8 = True, 
+		**params )
+	return  np.interp( koverh, kh, PK )
+
+def sigma_r (
+	R = 8.0 ,
+	redshiftlist = [0] , 
+	kmin = 1.0e-10 , 
+	maxk = 1.0 , 
+	logk_spacing = 0.02 ,
+	tol = 4.8e-4 ,
+	rtol = 4.8e-4, 
+	**params ):
+
+
+	import scipy.integrate as si 
+
+
+	integrand = lambda k : sigma_r_integrand (k, R, redshiftlist = redshiftlist , maxk = maxk , logk_spacing = logk_spacing , **params) 
+
+	sigmasq = si.romberg ( integrand , a = kmin ,b = maxk , tol=tol, 
+		rtol = rtol , show=False, divmax=10, vec_func=False)
+
+	return np.sqrt(sigmasq)
+
+
+
+def sigma_r_integrand(k , 
+	R  = 8.0 ,
+	redshiftlist = [0], 
+	maxk = 1.0 ,
+	logk_spacing = 0.02 , 
+	**params ):
+
+
+	""" Obtain the sigma(R) values for the redshift list provided 
+
+	"""
+
+	h  = cosmo.H0/100.0  
+	kh = k/h 
+	x = kh* R
+
+	W = 3*(np.sin(x) - (x)*np.cos(x))/(x)**3
+
+	integrand = k * k * W *W  / 2.0 /np.pi/ np.pi
+	integrand *= PK ( kh , redshiftlist = redshiftlist,  
+		maxk = maxk , logk_spacing =logk_spacing ,  **params ) 
+
+	return integrand	
 
 
 def sigma8(redshiftlist = [0] , 
@@ -119,3 +181,17 @@ def Asforsigma8(sigma8val , Asmin = 1.1e-9, Asmax = 5.1e-9, **params):
 	sig8  = opt.bisect(constr, Asmin , Asmax )
 	return sig8
 
+if __name__ == "__main__":
+
+	import numpy as np
+	import matplotlib.pyplot as plt
+	k = np.arange(1.0e-4, 1.0, 0.001)
+	plt.loglog (k , PK(k))
+	
+	plt.figure()
+	plt.loglog (k ,sigma_r_integrand(k))
+	plt.ylim(ymax = 0.5)
+	plt.show()
+	print sigma_r(R = 8.0*0.7)
+
+	#print sigma_r (R = 8) - sigma8()
