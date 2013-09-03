@@ -8,7 +8,7 @@ using pycamb to run CAMB
 import matplotlib.pyplot as plt
 import numpy as np 
 
-def __loadtransfers(rootname, 
+def __loadtransfers(rootname = None, 
 	filename = None,
 	dirname = None):
 
@@ -36,6 +36,7 @@ def __loadtransfers(rootname,
 	return transfers
 
 def __matterpowerfromtransfers ( transfers , 
+	col , 
 	h ,
 	As ,
 	ns ):
@@ -57,7 +58,7 @@ def __matterpowerfromtransfers ( transfers ,
 	koverh = transfers[:,0]
 	k = koverh*h 
 
-	TKtot  = transfers[:,-1] 
+	TKtot  = transfers[:,col] 
 
 	PPS =  __PrimordialPS (koverh, ns , As , h ) 	
 
