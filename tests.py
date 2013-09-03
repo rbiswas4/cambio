@@ -35,6 +35,11 @@ def testlinearityofsigma8withAs():
 
 def testAsforsigma8():
 
+	""" Check that the value of As obtained for a particular 
+	sigma8 value indeed returns that value.
+
+	"""
+
 	sig8val = 0.79 
 	As =  cp.Asforsigma8(sig8val)
 	params = {"scalar_amp": As}

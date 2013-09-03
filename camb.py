@@ -18,6 +18,9 @@ def PK ( koverh , redshiftlist = [0] ,
 	maxk = 1.0 ,
 	logk_spacing =0.02 ,
 	**params ) :
+	"""returns the interpolated matter power spectrum 
+
+	"""
 
 
 	kh, PK , sigma8 = pyc.matter_power (redshifts = redshiftlist, 
@@ -122,11 +125,14 @@ def sigma8(redshiftlist = [0] ,
 
 def __getsigma8(As , params):
 
-	params["scalar_amp"] = As
+	tparams = params
+	tparams["scalar_amp"] = As
+	#print "in getsigma8" 
+	#print tparams
 	
-	return sigma8( **params)  
+	return sigma8( **tparams)  
 
-def Asforsigma8(sigma8val , Asmin = 1.1e-9, Asmax = 5.1e-9, **params):
+def Asforsigma8(sigma8val , Asmin = 1.1e-9, Asmax = 5.1e-9,  **params):
 
 	"""Returns the value of As, the amplitude of the primordial scalar
 	fluctuations that produces a sigma8 value of sigma8val when all other
@@ -178,6 +184,9 @@ def Asforsigma8(sigma8val , Asmin = 1.1e-9, Asmax = 5.1e-9, **params):
 	#params["scalar_amp"] = Asguess
 
 	constr = lambda As: __getsigma8( As , params ) -sigma8val
+	#print constr(Asmin) 
+	#print constr(2.1e-9)
+	#print constr(Asmax) 
 	sig8  = opt.bisect(constr, Asmin , Asmax )
 	return sig8
 

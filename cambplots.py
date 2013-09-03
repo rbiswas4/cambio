@@ -1,7 +1,106 @@
 #!/usr/bin/env python
 
+"""
+Set of routines to plot quantities from CAMB output files, as opposed to 
+using pycamb to run CAMB 
+
+"""
 import matplotlib.pyplot as plt
 import numpy as np 
+
+def __loadtransfers(rootname, 
+	filename = None,
+	dirname = None):
+
+	""" 
+	returns transfer functions from the CAMB output 
+
+		col	: optional, defaults to 1 (CDM)
+			int, col corresponding to quantity of interest
+			1 = CDM
+			2 = Baryon
+			3 = radiation
+			4 = neutrino 
+			5 = massive neutrino
+			6 = Total 
+	"""
+
+	if dirname != None:
+		rootname = dirname + "/" + rootname
+	if filename == None :
+		filename  = rootname + "_transfer_out.dat" 
+
+	transfers = np.loadtxt(filename) 
+
+
+	return transfers
+
+def __matterpowerfromtransfers ( transfers , 
+	h ,
+	As ,
+	ns ):
+
+	"""
+	usage:
+		>>> transfers = cambplots.__loadtransfers(rootname = "m000n0", dirname = "../data/CAMB_outputs/")
+		>>> pkfromtransfers = cambplots.__matterpowerfromtransfers(transfers, h = 0.71, As = 2.14e-9, ns = 0.963)
+	
+	status:
+		Seems to match the power spectrum computed directly, but have
+		not done a ratio plot requiring interpolation.
+		
+		>>> pk = np.loadtxt ("../data/CAMB_outputs/m000n0_matterpower.dat")
+		>>> plt.loglog (pk[:,0], pk[:,1])
+		>>> plt.loglog (pkfromtransfers[:,0], pkfromtransfers[:,1])
+
+	"""
+	koverh = transfers[:,0]
+	k = koverh*h 
+
+	TKtot  = transfers[:,-1] 
+
+	PPS =  __PrimordialPS (koverh, ns , As , h ) 	
+
+	matterpower = 2.0*np.pi*np.pi* h *h * h * TKtot * TKtot * k * PPS  
+
+	res = np.zeros(shape= (len(TKtot),2))
+
+	res[:,0] = koverh
+	res[:,1] = matterpower
+	return res
+
+def __PrimordialPS( koverh , ns , As , h , k0 = 0.05 ):
+	"""Returns the primordial power spectrum 
+
+	"""
+
+	k = koverh * h 
+	return As* (k/k0 )**(ns -1.)  
+
+def __getdelta ( transfers ,
+	z, 
+	omegabh2 , 
+	omegach2 , 
+	omeganuh2 ,
+	H0 ):
+
+
+	"""
+
+	"""
+	h = H0/100.
+	Omegab  = omegabh2  / h / h
+	Omegac  = omegach2  / h / h 
+	Omegan  = omeganuh2 / h / h 
+
+
+	rhob =  Omegab* (1. + z )**3.0
+	rhocdm = Omegac* (1. + z)**3.0  
+	rhonm = Omegan * (1. + z) **3.0 
+
+	return 0
+
+
 def plotpk(rootname,
 	filename = None, 
 	dirname = '',
@@ -50,7 +149,7 @@ def plotpk(rootname,
 		rootname = dirname + "/" + rootname
 
 	if filename == None :
-		filename = rootname + "+matterpower.dat")
+		filename = rootname + "_matterpower.dat"
 	data = np.loadtxt(filename)
 
 	if legs !='':
