@@ -42,6 +42,11 @@ def __matterpowerfromtransfers ( transfers ,
 	ns ):
 
 	"""
+	return the matter power spectrum from the transfer output of CAMB input 
+	as an array . As opposed to plotting from the matter power output of 
+	CAMB, this allows one to plot the power spectrum of individual 
+	components. 
+
 	usage:
 		>>> transfers = cambplots.__loadtransfers(rootname = "m000n0", dirname = "../data/CAMB_outputs/")
 		>>> pkfromtransfers = cambplots.__matterpowerfromtransfers(transfers, h = 0.71, As = 2.14e-9, ns = 0.963)
@@ -56,20 +61,185 @@ def __matterpowerfromtransfers ( transfers ,
 
 	"""
 	koverh = transfers[:,0]
-	k = koverh*h 
 
 	TKtot  = transfers[:,col] 
 
+	res  = __matterpowerfromtransfersforsinglespecies ( koverh , 
+		TKtot , 
+		h , 
+		As , 
+		ns )
+	return res
+
+def __densitycontrastfrommatterpower(
+	koverh ,
+	matterpower, 
+	h  , 
+	As = None ,
+	ns = None ,
+ 	transfers = False ) :
+
+	"""
+	return the transfer output of a species from the matter power output
+	from the same species. If the parameters ns, As for the primordial
+	power spectrum are not supplied, this can calculate the transfer 
+	output multiplied by the square root of the primordial power spectrum.
+
+	args:
+
+		koverh:
+	
+		matterpower:
+	
+		h:
+	
+		As :
+		ns :
+	returns:
+
+	usage:
+	status:
+
+	"""
+	
+
+	if transfers :
+		if As == None or ns == None :
+			if transfers:
+				raise ValueError()
+		else:
+			PPS =  __PrimordialPS (koverh, ns , As , h ) 	
+	else :
+		PPS = np.ones(len(koverh))
+
+	
+	
+	transsq = matterpower / (2.0*np.pi*np.pi* h *h * h  * k * PPS ) 
+	trans = np.sqrt(transsq)
+
+	return trans 
+
+def __preparetransfersforcombination ( transfers, 
+	collist ):
+
+	"""
+	Returns tuples of transfers used in __combinetransfers 
+	given a numpy array transfers (as loaded from CAMB for example)  
+	and the list of columns collist for transfer functions. 
+
+
+	args:
+
+	returns:
+	"""
+
+	
+	koverh  = transfers[:,0] 
+
+
+	slist = [] 
+	for i in range(len(col)) :
+		s = np.zeros(shape = (len(koverh) ,2 ))
+		s[:,0] = koverh
+		s[:,1] = transfers[:,col[1]] 
+
+
+		slist.append(s)
+
+	return tuple(slist) 
+
+
+def __combinetransfers ( koverh , transfertuples , f ) :
+	""" 
+	returns the combined tranfer function of the tuple of transfer
+	outputs and their koverh values at the points in the 
+	numpy array  koverh. koverh must not extend beyong the common 
+	koverh of the transfer outputs. 
+
+	args:
+		koverh: arraylike 
+			numpy array of k/h values at which the transfer function
+			will be returned. The range of this koverh should be 
+			common to all the koverh ranges of the transfers 
+		transfertuples: tuple of transfer functions, mandatory
+			Each element of transfertuples 
+			should have a col for koverh, and the transfer output 
+			from CAMB (obviously of the same length). Different 
+			transfers can have different lengths. 
+		f: array like
+			array of fractions of each of component
+		
+	returns:
+
+	"""
+
+		# First find the intersection range of k/h 
+		# and store them in minkh and maxkh. 
+		# Clip koverh to the range of [minkh, maxkh] 
+
+	minkh = 0. 
+	maxkh = 1000.0
+
+	for transfers in transfertuples:
+
+		t = transfers[:,0]
+		mint = min(t) 
+		maxt = max(t)
+
+		if mint > minkh :
+			minkh  = mint 
+		if max < maxkh :
+			maxkh = maxtra
+
+	kbools = (koverh > minkh) and (koverh < minkh ) 
+	koverh = np.array(koverh[kbools])
+		
+		# Use numpy to interpolate the results
+	transferlist = []
+	for transfers in transfertuples:
+		koverh_native = transfers[:,0]
+		transfervals  = transfers[:,1] 
+		interpolatedtransfers = np.interp (koverh, koverh_native , 
+			transvervals )
+		transferlist.append(interpolatedtransfers)
+
+	reqdtransfers = np.array(transferlist) 
+
+	v = reqdtransfers * f 
+
+	return  v 
+	
+	
+def __matterpowerfromtransfersforsinglespecies(
+	koverh ,
+	transfer , h ,
+	As ,
+	ns ):
+
+	"""
+	args:
+		koverh :
+		transfer :
+		koverh :
+		h :
+		As :
+		ns :
+	usage:
+
+	"""
 	PPS =  __PrimordialPS (koverh, ns , As , h ) 	
 
-	matterpower = 2.0*np.pi*np.pi* h *h * h * TKtot * TKtot * k * PPS  
+	k = koverh*h 
 
-	res = np.zeros(shape= (len(TKtot),2))
+	matterpower = 2.0*np.pi*np.pi* h *h * h * transfer * transfer * k * PPS  
+
+	res = np.zeros(shape= (len(transfer),2))
 
 	res[:,0] = koverh
 	res[:,1] = matterpower
-	return res
 
+	return res 
+	
 def __PrimordialPS( koverh , ns , As , h , k0 = 0.05 ):
 	"""Returns the primordial power spectrum 
 
@@ -340,7 +510,7 @@ def crossingz( w0 , wa ):
 			Negative z implies no crossing
 	status:
 	"""	
-	a = (w0 + wa +1)/wa
+	a = (w0 + wa +1.)/wa
 	z = 1.0/a - 1.0
 	return z
 
