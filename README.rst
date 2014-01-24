@@ -8,7 +8,9 @@ installed.
 
 Code List:
 =========
-
+- cambio.py   :
+	Code to do io with CAMB. Useful for obtaining transfer functions
+		or power spectra of individual components.
 - cambruns.py : 
 		Code to launch camb jobs in a script.
 
