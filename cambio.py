@@ -119,6 +119,8 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 			common to all the koverh ranges of the transfers 
 		
 	returns:
+		array of combined transfer function of len equal to that of the
+		koverh array
 
 	"""
 
@@ -199,6 +201,46 @@ def __matterpowerfromtransfersforsinglespecies(
 
 	return res 
 	
+def cbtransfer ( transferfile, 
+	Omegacdm , 
+	Omegab , 
+	koverh = None ):
+
+	"""
+	Returns the baryon- CDM transfer function at requested koverh values
+	from the transfer function file and the values of Omegacdm and Omegab
+	provided. If no koverh values are requested, then the transfer function 
+	values are returned at the koverh values of the  provided transfer 
+	function file.  
+	args:
+		transferfile: string, mandatory
+			absolute path to transfer function file produced by CAMB
+		Omegacdm    : float , mandatory
+			value of omegacdm used to combine transfer functions
+
+		Omegab      : float mandatory
+			value of Omegab used to combine transfer functions
+		koverh      : array like ,optional defaults to None
+			values of koverh at which the values are requested.
+			if None, the transfer functions are returned at the 
+			values of koverh in the input transfer function file
+
+	returns: 
+		tuple of koverh , Tk of CDM and baryon combined (as in CAMB )
+
+	"""
+ 	transfers = __loadtransfers(rootname = None, 
+		filename = transferfile) 
+	f = [Omegacdm , Omegab ] 
+	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
+	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
+
+	if koverh == None:
+		koverh = transfers[:,0]
+
+	return koverh, tcbcomb 
+
+
 def cbpowerspectrum( transferfile, 
 	Omegacdm , 
 	Omegab , 
