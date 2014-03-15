@@ -18,13 +18,32 @@ R. Biswas, Fri Dec 13 17:01:22 CST 2013
 ------------------------------------------------------------------------------
 
 Useful Routines: 
-
+Power Spectrum Calculation:
 	- Compute power spectrum of a combination of components in a transfer function.
 """
 import matplotlib.pyplot as plt
 import numpy as np 
 
-def __loadtransfers(rootname = None, 
+
+
+
+def loadpowerspectrum( powerspectrumfile ):
+	
+	"""Loads the power spectrum from CAMB into an array with columns 
+	of k in units of h / Mpc and power spectrum 
+
+	args:
+		powerspectrumfile : string, mandatory
+			filename of the power spectrum output from CAMB
+
+	"""
+	
+	import numpy as np
+
+	pk = np.loadtxt(powerspectrumfile) 
+
+	return pk
+def loadtransfers(rootname = None, 
 	filename = None,
 	dirname = None):
 
@@ -59,6 +78,168 @@ def __loadtransfers(rootname = None,
 	transfers = np.loadtxt(filename) 
 	return transfers
 
+def PrimordialPS( koverh , ns , As , h , k0 = 0.05 ):
+	"""Returns the primordial power spectrum 
+
+	"""
+
+	k = koverh * h 
+	return As* (k/k0 )**(ns -1.)  
+	
+
+def cbtransfer ( transferfile, 
+	Omegacdm , 
+	Omegab , 
+	koverh = None ):
+
+	"""
+	Returns the baryon- CDM transfer function at requested koverh values
+	from the transfer function file and the values of Omegacdm and Omegab
+	provided. If no koverh values are requested, then the transfer function 
+	values are returned at the koverh values of the  provided transfer 
+	function file.  
+	args:
+		transferfile: string, mandatory
+			absolute path to transfer function file produced by CAMB
+		Omegacdm    : float , mandatory
+			value of omegacdm used to combine transfer functions
+
+		Omegab      : float mandatory
+			value of Omegab used to combine transfer functions
+		koverh      : array like ,optional defaults to None
+			values of koverh at which the values are requested.
+			if None, the transfer functions are returned at the 
+			values of koverh in the input transfer function file
+
+	returns: 
+		tuple of koverh , Tk of CDM and baryon combined (as in CAMB )
+
+	"""
+ 	transfers = loadtransfers(rootname = None, 
+		filename = transferfile) 
+	f = [Omegacdm , Omegab ] 
+	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
+	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
+
+	if koverh == None:
+		koverh = transfers[:,0]
+
+	return koverh, tcbcomb 
+
+def matterpowerfromtransfersforsinglespecies(
+	koverh ,
+	transfer , 
+	h ,
+	As ,
+	ns ):
+
+	"""
+	returns the power spectrum values corresponding to a set of 
+		transfer function values at the values of koverh 
+		(comoving k/h in units of h/Mpc)
+	args:
+		koverh : array like, mandatory (but can be None) 
+			values of comoving k/h  in units of h/Mpc as in CAMB 
+			cols at which power spectrum values are requested
+			
+		transfer :  a tuple of (k/h , transfer functions) 
+		h :
+		As :
+		ns :
+	returns  : array of shape (numkoverh, 2) , with arr[:,0] = koverh , 
+		arr[:,1] = powerspectra
+	usage:
+		>>> transferout = loadtransfers(filename = "transfer.dat")
+
+	status:
+
+	"""
+
+	if koverh == None:
+		koverh = transfer[0]
+
+	PPS =  PrimordialPS (koverh, ns , As , h ) 	
+
+	k = koverh*h 
+
+	transferinterp = np.interp(koverh, transfer[0],transfer[1])
+	print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer), np.shape(transferinterp)
+	matterpower = 2.0*np.pi*np.pi* h *h * h * transferinterp * transferinterp * k * PPS  
+
+	res = np.zeros(shape= (len(koverh),2))
+
+	res[:,0] = koverh
+	res[:,1] = matterpower
+
+	return res 
+
+def cbpowerspectrum( transferfile, 
+	Omegacdm , 
+	Omegab , 
+	h , 
+	Omeganu = 0.0, 
+	As = None, 
+	ns = None ,
+	koverh = None ):
+	"""
+	Returns the baryon- CDM matter power spectrum using the transfer function
+	output, usng the cosmological parameters As, ns, h, Omegab, Omegacdm 
+
+	args:
+		As : If As is None, a default value of 2.1e-9 is applied
+		     If As >1e-5, then As is assumed to be a ratio to be 
+			multiplied to Asdefault to get the correct As
+		     If As < 1e-5, then As is assumed to be the real As value
+
+
+	returns:
+
+	
+
+	"""
+		
+	
+	Asdefault = 2.1e-9 
+	if As == None :
+		As = Asdefault
+	elif As > 1e-5:
+		As = Asdefault *As 
+	else:
+		As = As 
+ 
+
+	if ns == None :
+		ns = 0.963
+
+ 	transfers = loadtransfers(rootname = None, 
+		filename = transferfile) 
+
+	f = [Omegacdm , Omegab ] 
+		#Do as in HACC
+	fnu = Omeganu / (Omeganu + Omegacdm + Omegab )
+	fcb = 1.0 - fnu 
+
+	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
+	
+	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
+
+	if koverh ==None:
+		koverh = transfers[:,0]
+	res = matterpowerfromtransfersforsinglespecies(
+		koverh  =koverh,
+		transfer = tcbcomb , 
+		h = h,
+		As = As,
+		ns  = ns)
+
+
+	res [:,1] = fcb * res[:,1]
+	return res	
+###########################################################################
+#########################                 ################################# 
+######################### Helper Routines #################################
+#########################                 ################################# 
+########################################################################### 
 def __preparetransfersforcombination ( transfers, 
 	collist ):
 
@@ -163,145 +344,6 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 	#print "return shape", np.shape(ret)
 	return ret
 
-def __PrimordialPS( koverh , ns , As , h , k0 = 0.05 ):
-	"""Returns the primordial power spectrum 
-
-	"""
-
-	k = koverh * h 
-	return As* (k/k0 )**(ns -1.)  
-def __matterpowerfromtransfersforsinglespecies(
-	koverh ,
-	transfer , h ,
-	As ,
-	ns ):
-
-	"""
-	args:
-		koverh :
-		transfer :
-		koverh :
-		h :
-		As :
-		ns :
-	usage:
-
-	"""
-	PPS =  __PrimordialPS (koverh, ns , As , h ) 	
-
-	k = koverh*h 
-
-	print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer)
-	matterpower = 2.0*np.pi*np.pi* h *h * h * transfer * transfer * k * PPS  
-
-	res = np.zeros(shape= (len(transfer),2))
-
-	res[:,0] = koverh
-	res[:,1] = matterpower
-
-	return res 
-	
-def cbtransfer ( transferfile, 
-	Omegacdm , 
-	Omegab , 
-	koverh = None ):
-
-	"""
-	Returns the baryon- CDM transfer function at requested koverh values
-	from the transfer function file and the values of Omegacdm and Omegab
-	provided. If no koverh values are requested, then the transfer function 
-	values are returned at the koverh values of the  provided transfer 
-	function file.  
-	args:
-		transferfile: string, mandatory
-			absolute path to transfer function file produced by CAMB
-		Omegacdm    : float , mandatory
-			value of omegacdm used to combine transfer functions
-
-		Omegab      : float mandatory
-			value of Omegab used to combine transfer functions
-		koverh      : array like ,optional defaults to None
-			values of koverh at which the values are requested.
-			if None, the transfer functions are returned at the 
-			values of koverh in the input transfer function file
-
-	returns: 
-		tuple of koverh , Tk of CDM and baryon combined (as in CAMB )
-
-	"""
- 	transfers = __loadtransfers(rootname = None, 
-		filename = transferfile) 
-	f = [Omegacdm , Omegab ] 
-	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
-	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
-
-	if koverh == None:
-		koverh = transfers[:,0]
-
-	return koverh, tcbcomb 
-
-
-def cbpowerspectrum( transferfile, 
-	Omegacdm , 
-	Omegab , 
-	h , 
-	Omeganu = 0.0, 
-	As = None, 
-	ns = None ,
-	koverh = None ):
-	"""
-	Returns the baryon- CDM matter power spectrum using the transfer function
-	output, usng the cosmological parameters As, ns, h, Omegab, Omegacdm 
-
-	args:
-		As : If As is None, a default value of 2.1e-9 is applied
-		     If As >1e-5, then As is assumed to be a ratio to be 
-			multiplied to Asdefault to get the correct As
-		     If As < 1e-5, then As is assumed to be the real As value
-
-
-	returns:
-
-	
-
-	"""
-		
-	
-	Asdefault = 2.1e-9 
-	if As == None :
-		As = Asdefault
-	elif As > 1e-5:
-		As = Asdefault *As 
-	else:
-		As = As 
- 
-
-	if ns == None :
-		ns = 0.963
-
- 	transfers = __loadtransfers(rootname = None, 
-		filename = transferfile) 
-
-	f = [Omegacdm , Omegab ] 
-		#Do as in HACC
-	fnu = Omeganu / (Omeganu + Omegacdm + Omegab )
-	fcb = 1.0 - fnu 
-
-	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
-	
-	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
-
-	if koverh ==None:
-		koverh = transfers[:,0]
-	res = __matterpowerfromtransfersforsinglespecies(
-		koverh  =koverh,
-		transfer = tcbcomb , 
-		h = h,
-		As = As,
-		ns  = ns)
-
-
-	return fcb * res	
 
 def __matterpowerfromtransfers ( transfers , 
 	col , 
@@ -376,7 +418,7 @@ def __densitycontrastfrommatterpower(
 			if transfers:
 				raise ValueError()
 		else:
-			PPS =  __PrimordialPS (koverh, ns , As , h ) 	
+			PPS =  PrimordialPS (koverh, ns , As , h ) 	
 	else :
 		PPS = np.ones(len(koverh))
 
