@@ -102,7 +102,7 @@ def PrimordialPS( koverh , ns , As , h , k0 = 0.05 ,nrun = 0.0):
 	"""
 	print "PRIMORDIAL ", ns , As , k0 
 	k = koverh * h 
-	running = (k/k0)**(0.5*log(k/k0)*nrun ) 
+	running = (k/k0)**(0.5*np.log(k/k0)*nrun ) 
 	return As* (k/k0 )**(ns -1.) * running  
 	
 
