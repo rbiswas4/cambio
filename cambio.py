@@ -68,6 +68,7 @@ def loadtransfers(rootname = None,
 			4 = neutrino 
 			5 = massive neutrino
 			6 = Total 
+
 	"""
 
 	if dirname != None:
@@ -78,13 +79,31 @@ def loadtransfers(rootname = None,
 	transfers = np.loadtxt(filename) 
 	return transfers
 
-def PrimordialPS( koverh , ns , As , h , k0 = 0.05 ):
+def PrimordialPS( koverh , ns , As , h , k0 = 0.05 ,nrun = 0.0):
 	"""Returns the primordial power spectrum 
 
-	"""
+	args:
+		koverh :
+		ns     : float , mandatory 
+			scalar spectral index
+		As     : float , mandatory 
+		h      : float, mandatory
+		k0     : float, optional, defaults to 0.05
+			pivot, in units of Mpc^{-1}
 
+		nrun   : float, optional, defaults to 0.0
+			
+
+	status:
+		Tested withoutrunning. Tests with nrun not done
+	notes: 
+		Consider moving to cosmodefs
+
+	"""
+	print "PRIMORDIAL ", ns , As , k0 
 	k = koverh * h 
-	return As* (k/k0 )**(ns -1.)  
+	running = (k/k0)**(0.5*log(k/k0)*nrun ) 
+	return As* (k/k0 )**(ns -1.) * running  
 	
 
 def cbtransfer ( transferfile, 
@@ -121,6 +140,7 @@ def cbtransfer ( transferfile,
 	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
 	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
 
+	
 	if koverh == None:
 		koverh = transfers[:,0]
 
@@ -154,6 +174,7 @@ def matterpowerfromtransfersforsinglespecies(
 	status:
 
 	"""
+	print "As in matterpowerfromtransfersforsinglespecies" , As
 
 	if koverh == None:
 		koverh = transfer[0]
@@ -162,6 +183,7 @@ def matterpowerfromtransfersforsinglespecies(
 
 	k = koverh*h 
 
+	print type(transfer)
 	transferinterp = np.interp(koverh, transfer[0],transfer[1])
 	print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer), np.shape(transferinterp)
 	matterpower = 2.0*np.pi*np.pi* h *h * h * transferinterp * transferinterp * k * PPS  
@@ -193,19 +215,19 @@ def cbpowerspectrum( transferfile,
 
 
 	returns:
-
-	
-
+		array res, where res[:,0] is koverh and res[:,1] is the power 
+		spectrum
 	"""
 		
+	print "AS in cbpowerspectrum " , As
 	
-	Asdefault = 2.1e-9 
+	#Asdefault = 2.1e-9 
 	if As == None :
-		As = Asdefault
-	elif As > 1e-5:
-		As = Asdefault *As 
-	else:
-		As = As 
+		As = 1.0#Asdefault
+	#elif As > 1e-5:
+	#	As = Asdefault *As 
+	#else:
+	#	As = As 
  
 
 	if ns == None :
@@ -223,11 +245,13 @@ def cbpowerspectrum( transferfile,
 	
 	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
 
+	print "tcbcomb ", type(tcbcomb)
+	print np.shape(tcbcomb) , len(transfers[:,0])
 	if koverh ==None:
 		koverh = transfers[:,0]
-	res = matterpowerfromtransfersforsinglespecies(
-		koverh  =koverh,
-		transfer = tcbcomb , 
+		res = matterpowerfromtransfersforsinglespecies(
+		koverh  = koverh,
+	transfer = (koverh, tcbcomb), 
 		h = h,
 		As = As,
 		ns  = ns)
@@ -317,7 +341,7 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 		mint = min(koverh_native) 
 		maxt = max(koverh_native)
 		
-		kbools = (koverh > mint) and (koverh < maxt ) 
+		kbools = (koverh > mint) & (koverh < maxt ) 
 		koverh = np.array(koverh[kbools])
 
 		#Put (interpolated if k values provided) transfer functions 
@@ -700,7 +724,25 @@ def crossingz( w0 , wa ):
 	return z
 
 if __name__=="__main__":
-	plotpk("test",showtitle=True)	
-	plotpk("CM_0.04_0.1175_70.0_-0.725_1.0")
-	plotpkresids("CM_0.04_0.1175_70.0_-0.725_1.0","test")
+
+		
+	import matplotlib.pyplot as plt
+	ps = cbpowerspectrum(
+		transferfile = "example_data/oneh_transfer_out.dat",
+		Omegacdm = 0.3, 
+		Omegab = 0.05, 
+		h = 0.71, 
+		Omeganu = 0.0, 
+		As = None, 
+		ns = None ,
+		koverh = None )
+
+	print type(ps)
+	plt.loglog ( ps[:,0], ps[:,1])
+	plt.show()
+	
+	
+	#plotpk("test",showtitle=True)	
+	#plotpk("CM_0.04_0.1175_70.0_-0.725_1.0")
+	#plotpkresids("CM_0.04_0.1175_70.0_-0.725_1.0","test")
 
