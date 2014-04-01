@@ -177,6 +177,7 @@ def matterpowerfromtransfersforsinglespecies(
 	status:
 
 	"""
+	print "khajksd ", As
 	print "As in matterpowerfromtransfersforsinglespecies" , As
 
 	if koverh == None:
@@ -187,7 +188,7 @@ def matterpowerfromtransfersforsinglespecies(
 	k = koverh*h 
 
 	print type(transfer)
-	transferinterp = np.interp(koverh, transfer[0],transfer[1])
+	transferinterp = np.interp(koverh, transfer[0],transfer[1],left = np.nan, right = np.nan)
 	print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer), np.shape(transferinterp)
 	matterpower = 2.0*np.pi*np.pi* h *h * h * transferinterp * transferinterp * k * PPS  
 
@@ -368,7 +369,7 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 	for transfers in transfertuples:
 		transfervals  = transfers[:,1] 
 		interpolatedtransfers = np.interp (koverh, koverh_native , 
-			transfervals )
+			transfervals ,left = np.nan, right= np.nan)
 		transferlist.append(interpolatedtransfers)
 
 	reqdtransfers = np.array(transferlist).transpose()
