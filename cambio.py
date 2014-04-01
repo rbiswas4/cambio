@@ -143,6 +143,9 @@ def cbtransfer ( transferfile,
 	
 	if koverh == None:
 		koverh = transfers[:,0]
+	print "******************"
+	print tcbcomb 
+	print transfers[:,-1]
 
 	return koverh, tcbcomb 
 
@@ -238,12 +241,26 @@ def cbpowerspectrum( transferfile,
 
 	f = [Omegacdm , Omegab ] 
 		#Do as in HACC
+	print "Omeganu ", Omeganu 
+
+		###The lines below are wrong
+		###for the calculation follow comments with three ###
+		### R. Biswas ,  Mon Mar 31 19:42:09 CDT 2014
+	# want rhob/(rhob + rhonu + rhoc )*Tb + rhoc /(rhoc + rhonu +rhob)*Tc
+	# = (rhob+ rhoc)/(rhob + rhoc + rhonu) *   (rhob/(rhob + rhoc) + rhoc/(rhoc + rhob))
+	# = (1 - fnu) * (f_b*Tb + f_c*c )
+		###I want (rhob * Tb + rhoc * Tc )/(rhob + rhoc)
 	fnu = Omeganu / (Omeganu + Omegacdm + Omegab )
 	fcb = 1.0 - fnu 
+	print f
 
 	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
 	
+	#f_b Tb + fc Tc 
 	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
+
+	print "*****************"
+	print tcbcomb/transfers[:,-1]
 
 	print "tcbcomb ", type(tcbcomb)
 	print np.shape(tcbcomb) , len(transfers[:,0])
@@ -251,13 +268,13 @@ def cbpowerspectrum( transferfile,
 		koverh = transfers[:,0]
 		res = matterpowerfromtransfersforsinglespecies(
 		koverh  = koverh,
-	transfer = (koverh, tcbcomb), 
+		transfer = (koverh, tcbcomb), 
 		h = h,
 		As = As,
 		ns  = ns)
+	print "fcb*f", fcb ,f
 
-
-	res [:,1] = fcb * res[:,1]
+	#res [:,1] = fcb * fcb*res[:,1]
 	return res	
 ###########################################################################
 #########################                 ################################# 
@@ -366,6 +383,14 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 
 	ret =   v.sum(axis=1)
 	#print "return shape", np.shape(ret)
+	print "jkhhajkdhask  transfertuples"
+	print transfertuples[0][:,1]
+	print transfertuples[1][:,1]
+	print fracs
+	
+	test = transfertuples[0][:,1] *fracs[0]+ transfertuples[1][:,1]*fracs[1]
+	print test
+	ret = test
 	return ret
 
 

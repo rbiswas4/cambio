@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 #Show that cbtransfer works as expected with an example dataset
-
+import sys
+import cambio
 import numpy as np
-from camb_utils import cambio
 import matplotlib.pyplot as plt
 
 location = "../example_data"
