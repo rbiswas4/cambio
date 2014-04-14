@@ -100,7 +100,7 @@ def PrimordialPS( koverh , ns , As , h , k0 = 0.05 ,nrun = 0.0):
 		Consider moving to cosmodefs
 
 	"""
-	print "PRIMORDIAL ", ns , As , k0 
+	#print "PRIMORDIAL ", ns , As , k0 
 	k = koverh * h 
 	running = (k/k0)**(0.5*np.log(k/k0)*nrun ) 
 	return As* (k/k0 )**(ns -1.) * running  
@@ -143,9 +143,9 @@ def cbtransfer ( transferfile,
 	
 	if koverh == None:
 		koverh = transfers[:,0]
-	print "******************"
-	print tcbcomb 
-	print transfers[:,-1]
+	#print "******************"
+	#print tcbcomb 
+	#print transfers[:,-1]
 
 	return koverh, tcbcomb 
 
@@ -177,8 +177,8 @@ def matterpowerfromtransfersforsinglespecies(
 	status:
 
 	"""
-	print "khajksd ", As
-	print "As in matterpowerfromtransfersforsinglespecies" , As
+	#print "khajksd ", As
+	#print "As in matterpowerfromtransfersforsinglespecies" , As
 
 	if koverh == None:
 		koverh = transfer[0]
@@ -187,9 +187,9 @@ def matterpowerfromtransfersforsinglespecies(
 
 	k = koverh*h 
 
-	print type(transfer)
+	#print type(transfer)
 	transferinterp = np.interp(koverh, transfer[0],transfer[1],left = np.nan, right = np.nan)
-	print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer), np.shape(transferinterp)
+	#print "shapes" , np.shape(k) , np.shape(koverh), np.shape(transfer), np.shape(transferinterp)
 	matterpower = 2.0*np.pi*np.pi* h *h * h * transferinterp * transferinterp * k * PPS  
 
 	res = np.zeros(shape= (len(koverh),2))
@@ -223,7 +223,7 @@ def cbpowerspectrum( transferfile,
 		spectrum
 	"""
 		
-	print "AS in cbpowerspectrum " , As
+	#print "AS in cbpowerspectrum " , As
 	
 	#Asdefault = 2.1e-9 
 	if As == None :
@@ -242,7 +242,7 @@ def cbpowerspectrum( transferfile,
 
 	f = [Omegacdm , Omegab ] 
 		#Do as in HACC
-	print "Omeganu ", Omeganu 
+	#print "Omeganu ", Omeganu 
 
 		###The lines below are wrong
 		###for the calculation follow comments with three ###
@@ -253,18 +253,20 @@ def cbpowerspectrum( transferfile,
 		###I want (rhob * Tb + rhoc * Tc )/(rhob + rhoc)
 	fnu = Omeganu / (Omeganu + Omegacdm + Omegab )
 	fcb = 1.0 - fnu 
-	print f
+	#print f
 
 	tcb =__preparetransfersforcombination(transfers, collist=[1,2])
 	
 	#f_b Tb + fc Tc 
 	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
 
-	print "*****************"
-	print tcbcomb/transfers[:,-1]
+	#print "*****************"
+	#print transfers[:,0]
+	#print tcbcomb
+	#print "*****************"
 
-	print "tcbcomb ", type(tcbcomb)
-	print np.shape(tcbcomb) , len(transfers[:,0])
+	#print "tcbcomb ", type(tcbcomb)
+	#print np.shape(tcbcomb) , len(transfers[:,0])
 	if koverh ==None:
 		koverh = transfers[:,0]
 		res = matterpowerfromtransfersforsinglespecies(
@@ -273,7 +275,7 @@ def cbpowerspectrum( transferfile,
 		h = h,
 		As = As,
 		ns  = ns)
-	print "fcb*f", fcb ,f
+	#print "fcb*f", fcb ,f
 
 	#res [:,1] = fcb * fcb*res[:,1]
 	return res	
@@ -384,14 +386,14 @@ def __combinetransfers ( transfertuples , f , koverh = None) :
 
 	ret =   v.sum(axis=1)
 	#print "return shape", np.shape(ret)
-	print "jkhhajkdhask  transfertuples"
-	print transfertuples[0][:,1]
-	print transfertuples[1][:,1]
-	print fracs
+	#print "jkhhajkdhask  transfertuples"
+	#print transfertuples[0][:,1]
+	#print transfertuples[1][:,1]
+	#print fracs
 	
-	test = transfertuples[0][:,1] *fracs[0]+ transfertuples[1][:,1]*fracs[1]
-	print test
-	ret = test
+	ret = transfertuples[0][:,1] *fracs[0]+ transfertuples[1][:,1]*fracs[1]
+	#print test
+	#ret = test
 	return ret
 
 
@@ -763,7 +765,7 @@ if __name__=="__main__":
 		ns = None ,
 		koverh = None )
 
-	print type(ps)
+	#print type(ps)
 	plt.loglog ( ps[:,0], ps[:,1])
 	plt.show()
 	
