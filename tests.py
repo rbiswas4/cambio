@@ -52,5 +52,5 @@ if __name__=="__main__":
 
 	import camb as cp
 	#Should run the next test , commented out for speed.
-	#testlinearityofsigma8withAs()
+    testlinearityofsigma8withAs()
 	

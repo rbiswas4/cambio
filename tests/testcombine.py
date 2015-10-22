@@ -2,13 +2,16 @@
 
 #Show that cbtransfer works as expected with an example dataset
 import sys
-import cambio
+import os
+from camb_utils import cambio
+from camb_utils import example_data
 import numpy as np
 import matplotlib.pyplot as plt
 
-location = "../example_data"
-fname  = location + "/oneh_transfer_out.dat"
-t = cambio.__loadtransfers(filename = fname )
+# example_data =  os.path.join(os.path.split(camb_utils.__file__)[0], 'example_data/')
+        
+fname=os.path.join(example_data, 'oneh_transfer_out.dat')
+t = cambio.loadtransfers(filename = fname )
 transfertuples = cambio.__preparetransfersforcombination(t,[1,2]) 
 #c = cambio.__combinetransfers(transfertuples, f = [0.24 ,0.04])
 c = cambio.cbtransfer(fname , 0.24, 0.04)
