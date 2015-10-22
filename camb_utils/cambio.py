@@ -71,9 +71,9 @@ def loadtransfers(rootname = None,
 
 	"""
 
-	if dirname != None:
+	if dirname is not None:
 		rootname = dirname + "/" + rootname
-	if filename == None :
+	if filename is None :
 		filename  = rootname + "_transfer_out.dat" 
 
 	transfers = np.loadtxt(filename) 
@@ -141,7 +141,7 @@ def cbtransfer ( transferfile,
 	tcbcomb = __combinetransfers(tcb , f= f, koverh= koverh)
 
 	
-	if koverh == None:
+	if koverh is None:
 		koverh = transfers[:,0]
 	#print "******************"
 	#print tcbcomb 
@@ -180,7 +180,7 @@ def matterpowerfromtransfersforsinglespecies(
 	#print "khajksd ", As
 	#print "As in matterpowerfromtransfersforsinglespecies" , As
 
-	if koverh == None:
+	if koverh is None:
 		koverh = transfer[0]
 
 	PPS =  PrimordialPS (koverh, ns , As , h ) 	
@@ -226,7 +226,7 @@ def cbpowerspectrum( transferfile,
 	#print "AS in cbpowerspectrum " , As
 	
 	#Asdefault = 2.1e-9 
-	if As == None :
+	if As is None :
 		As = 1.0#Asdefault
 	#elif As > 1e-5:
 	#	As = Asdefault *As 
@@ -234,7 +234,7 @@ def cbpowerspectrum( transferfile,
 	#	As = As 
  
 
-	if ns == None :
+	if ns is None :
 		ns = 0.963
 
  	transfers = loadtransfers(rootname = None, 
@@ -466,7 +466,7 @@ def __densitycontrastfrommatterpower(
 	
 
 	if transfers :
-		if As == None or ns == None :
+		if As is None or ns is None :
 			if transfers:
 				raise ValueError()
 		else:
@@ -556,7 +556,7 @@ def plotpk(rootname,
 	if dirname != '':
 		rootname = dirname + "/" + rootname
 
-	if filename == None :
+	if filename is None :
 		filename = rootname + "_matterpower.dat"
 	data = np.loadtxt(filename)
 
